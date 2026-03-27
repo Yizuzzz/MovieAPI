@@ -1,37 +1,19 @@
 from dotenv import load_dotenv
 load_dotenv()
+
 import os
 import httpx
 from fastapi import APIRouter
-
 from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException
+
+
 from database.database import get_db
 from database.models import FavoriteMovie
-from fastapi import Depends
-from schemas.movie import MovieCreate, MovieResponse
+from schemas.movie import MovieCreate, MovieResponse, MovieUpdate
+from services.fetch_movies import fetch_movies_from_tmdb
 
 router = APIRouter(prefix="/movies")
-
-def fetch_movies_from_tmdb(query: str):
-    headers = {
-        'Authorization': f'Bearer {os.getenv("TMDB_APIKEY")}',
-    }
-
-    params = {
-        'query': query,
-    }
-
-    with httpx.Client() as client:
-        r = client.get('https://api.themoviedb.org/3/search/movie', headers=headers, params=params)
-        if r.status_code != 200:
-            return {"message": "Error fetching data from TMDB API"}
-        data = r.json()
-        if not data.get("results", []):
-            return {"message": "No movies found"}
-        movies = []
-        for movie in data.get("results", [])[:5]:
-            movies.append({"title": movie['title'], 'overview': movie['overview'], 'release_date': movie['release_date'], 'poster_path': movie['poster_path']})
-    return movies
 
 @router.get("/search")
 async def get_movies(q: str):
@@ -61,3 +43,27 @@ async def add_favorite(movie: MovieCreate, db: Session = Depends(get_db)):
 async def get_favorites(db:Session = Depends(get_db)):
     favorites = db.query(FavoriteMovie).all()
     return favorites
+
+@router.delete("/favorites/{movie_id}")
+async def delete_favorite(movie_id: int, db: Session = Depends(get_db)):
+    favorite = db.query(FavoriteMovie).filter(FavoriteMovie.id == movie_id).first()
+    if not favorite:
+        raise HTTPException(status_code=404, detail="Favorite movie not found")
+    db.delete(favorite)
+    db.commit()
+    return {"message": "Favorite movie deleted successfully"}
+
+@router.patch("/favorites/{movie_id}")
+async def update_favorite(movie_id: int, movie: MovieUpdate, db: Session = Depends(get_db)):
+    favorite = db.query(FavoriteMovie).filter(FavoriteMovie.id == movie_id).first()
+    if not favorite:
+        raise HTTPException(status_code=404, detail="Favorite movie not found")
+    for key, value in movie.dict(exclude_unset=True, exclude_none=True).items():
+        setattr(favorite, key, value)
+    db.commit()
+    db.refresh(favorite)
+    return {"message": "Favorite movie updated successfully",
+            "id": favorite.id,
+            "title": favorite.title,
+            "rating": favorite.rating,
+            }
