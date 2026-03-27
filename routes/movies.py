@@ -40,8 +40,14 @@ async def add_favorite(movie: MovieCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/favorites", response_model=list[MovieResponse])
-async def get_favorites(db:Session = Depends(get_db)):
+async def get_favorites(db:Session = Depends(get_db), rating : int | None = None, page: int = 1, page_size: int = 10):
     favorites = db.query(FavoriteMovie).all()
+    if rating is not None:
+        favorites = [favorite for favorite in favorites if favorite.rating == rating]
+    # Implement pagination
+    start = (page - 1) * page_size
+    end = start + page_size
+    favorites = favorites[start:end]
     return favorites
 
 @router.delete("/favorites/{movie_id}")
