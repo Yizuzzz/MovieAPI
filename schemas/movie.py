@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 
 class MovieCreate(BaseModel):
     title: str
-    overview: str | None
-    release_date: str | None
+    overview: str | None = None
+    release_date: str | None = None
     poster_path: str
     rating: int = Field(..., ge=0, le=5)
 

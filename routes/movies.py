@@ -31,16 +31,17 @@ async def add_favorite(movie: MovieCreate, db: Session = Depends(get_db)):
         poster_path=movie.poster_path,
         rating=movie.rating
     )
+    print("guardando:", new_favorite.title, new_favorite.rating)
     db.add(new_favorite)
     db.commit()
     db.refresh(new_favorite)
     return {"Pelicula agregada: ": new_favorite.title,
             "Rating: ": new_favorite.rating,
-            }
+    }
 
 
 @router.get("/favorites", response_model=list[MovieResponse])
-async def get_favorites(db:Session = Depends(get_db), rating : int | None = None, page: int = 1, page_size: int = 10):
+async def get_favorites(db:Session = Depends(get_db), rating : int | None = None, page: int = 1, page_size: int = 1000):
     favorites = db.query(FavoriteMovie).all()
     if rating is not None:
         favorites = [favorite for favorite in favorites if favorite.rating == rating]
