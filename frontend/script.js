@@ -1,4 +1,4 @@
-const ruta = "http://127.0.0.1:8000/movies/";
+const ruta = "https://movieapi-mwc0.onrender.com/movies/";
 
 let currentPage = 1;
 const pageSize = 10;
