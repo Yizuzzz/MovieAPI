@@ -37,9 +37,21 @@ function searchMovies() {
                 const saveBtn = movieDiv.querySelector(".save-btn");
 
                 saveBtn.addEventListener("click", () => {
-                    console.log("CLICK:", movie.title);
                     saveBtn.disabled = true;
-                    saveFavorite(movie);
+                    const card = saveBtn.closest(".card");
+
+                    saveFavorite(movie).then(success => {
+                        if (success) {
+                            saveBtn.textContent = "✔ Guardado";
+
+                            card.classList.add("pop");
+                            setTimeout(() => card.classList.remove("pop"), 300);
+
+                            showToast("Película agregada a favoritos ⭐");
+                        } else {
+                            saveBtn.disabled = false;
+                        }
+                    });
                 }, { once: true });
 
                 resultsDiv.appendChild(movieDiv);
@@ -53,17 +65,43 @@ let isSaving = false;
 function saveFavorite(movie) {
     const ratingInput = prompt("Califica la película (1-5):");
 
-    if (ratingInput === null) return;
+    if (ratingInput === null) return Promise.resolve(false);
 
     const rating = parseInt(ratingInput);
 
     if (isNaN(rating) || rating < 1 || rating > 5) {
-        alert("Ingresa un número válido entre 1 y 5");
-        return;
+        alert("Número inválido");
+        return Promise.resolve(false);
     }
 
-    // 👇 antes de guardar, validamos duplicado (siguiente paso)
-    checkIfExistsAndSave(movie, rating);
+    return fetch(`${ruta}favorites`)
+        .then(res => res.json())
+        .then(favorites => {
+            const exists = favorites.some(fav =>
+                fav.title.toLowerCase() === movie.title.toLowerCase()
+            );
+
+            if (exists) {
+                showToast("⚠️ Ya está en favoritos");
+                return false;
+            }
+
+            return fetch(`${ruta}favorites`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: movie.title,
+                    overview: movie.overview,
+                    release_date: movie.release_date,
+                    poster_path: movie.poster_path,
+                    rating: rating
+                })
+            })
+            .then(() => true);
+        });
+        checkIfExistsAndSave(movie, rating);
 }
 
 function checkIfExistsAndSave(movie, rating) {
@@ -189,4 +227,21 @@ function deleteFavorite(movieId) {
             alert("Error al eliminar la película. Inténtalo de nuevo.");
         });
     }
+}
+
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.classList.add("toast");
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // activar animación
+    setTimeout(() => toast.classList.add("show"), 10);
+
+    // quitar después
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
