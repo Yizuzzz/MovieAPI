@@ -19,6 +19,6 @@ def fetch_movies_from_tmdb(query: str):
         if not data.get("results", []):
             return {"message": "No movies found"}
         movies = []
-        for movie in data.get("results", [])[:5]:
+        for movie in data.get("results", [])[:10]:
             movies.append({"title": movie['title'], 'overview': movie['overview'], 'release_date': movie['release_date'], 'poster_path': movie['poster_path']})
     return movies

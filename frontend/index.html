@@ -1,21 +1,33 @@
-<html>
-    <script src="script.js">
-        
-    </script>
-    <head>
-        <title>Its Popcorn Time</title>
-    </head>
-    <body>
-        <h1>Moviees</h1>
-        <p>Welcome to my app!</p>
-        <input type="text" id="movie-name" placeholder="Enter movie title">
-        <button id="search-button" onclick="searchMovies()">Search</button>
-        <button id="favorites-button" onclick="getFavorites()">Get Favorites</button>
-        <div id="favorites">
-            
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Popcorn Time 🍿</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- 🔥 NAVBAR -->
+    <div class="navbar">
+        <h1>🍿 Popcorn Time</h1>
+
+        <div class="nav-buttons">
+            <button class="btn-primary" onclick="searchMovies()">🔍 Buscar</button>
+            <button class="btn-secondary" onclick="getFavorites()">⭐ Favoritos</button>
         </div>
-        <div id="results">
-            
-        </div>
-    </body>
+    </div>
+
+    <!-- 🔍 SEARCH -->
+    <div class="search-container">
+        <input type="text" id="movie-name" placeholder="Buscar película...">
+    </div>
+
+    <!-- 🎬 CONTENIDO -->
+    <div id="results" class="grid"></div>
+    <div id="favorites" class="grid"></div>
+
+    <script src="script.js"></script>
+
+</body>
 </html>
