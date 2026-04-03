@@ -15,12 +15,8 @@ def fetch_movies_from_tmdb(query: str):
     with httpx.Client() as client:
         r = client.get('https://api.themoviedb.org/3/search/movie', params=params)
         if r.status_code != 200:
-            print("STATUS ERROR:", r.status_code)
-            print("RESPONSE:", r.text)
-            print("API KEY:", os.getenv("TMDB_APIKEY"))
             return []
         data = r.json()
-        print("TMBD RESPONSE:", data)
         if not data.get("results", []):
             return {"message": "No movies found"}
         movies = []

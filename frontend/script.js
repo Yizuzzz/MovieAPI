@@ -208,7 +208,6 @@ function updateButton(movieId, newRating) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data)
         alert(`Película ${data.title} actualizada ⭐`);
         getFavorites(); // Refresh the favorites list
     })

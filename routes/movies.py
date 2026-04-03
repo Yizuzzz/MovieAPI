@@ -31,7 +31,6 @@ async def add_favorite(movie: MovieCreate, db: Session = Depends(get_db)):
         poster_path=movie.poster_path,
         rating=movie.rating
     )
-    print("guardando:", new_favorite.title, new_favorite.rating)
     db.add(new_favorite)
     db.commit()
     db.refresh(new_favorite)
