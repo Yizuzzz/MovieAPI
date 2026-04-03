@@ -3,19 +3,23 @@ import os
 import httpx
 
 def fetch_movies_from_tmdb(query: str):
-    headers = {
+    '''headers = {
         'Authorization': f'Bearer {os.getenv("TMDB_APIKEY")}',
     }
-
+    '''
     params = {
         'query': query,
+        'api_key': os.getenv("TMDB_APIKEY"),
     }
 
     with httpx.Client() as client:
         r = client.get('https://api.themoviedb.org/3/search/movie', headers=headers, params=params)
         if r.status_code != 200:
-            return {"message": "Error fetching data from TMDB API"}
+            print("STATUS ERROR:", r.status_code)
+            print("RESPONSE:", r.text)
+            return []
         data = r.json()
+        print("TMBD RESPONSE:", data)
         if not data.get("results", []):
             return {"message": "No movies found"}
         movies = []

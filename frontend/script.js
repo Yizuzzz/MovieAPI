@@ -15,7 +15,12 @@ function searchMovies() {
             const resultsDiv = document.getElementById("results");
             resultsDiv.innerHTML = "";
 
-            data.forEach(movie => {
+                if (!Array.isArray(data)) {
+                    console.error("Respuesta inesperada:", data);
+                    return;
+                }
+
+                data.forEach(movie => {
                 const movieDiv = document.createElement("div");
                 movieDiv.classList.add("movie-result");
 
