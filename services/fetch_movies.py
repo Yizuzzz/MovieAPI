@@ -17,6 +17,7 @@ def fetch_movies_from_tmdb(query: str):
         if r.status_code != 200:
             print("STATUS ERROR:", r.status_code)
             print("RESPONSE:", r.text)
+            print("API KEY:", os.getenv("TMDB_APIKEY"))
             return []
         data = r.json()
         print("TMBD RESPONSE:", data)
