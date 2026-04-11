@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+'''from sqlalchemy import Column, Integer, String
 from database.database import Base, engine
 
 class FavoriteMovie(Base):
@@ -10,4 +10,4 @@ class FavoriteMovie(Base):
     release_date = Column(String, nullable=False)
     poster_path = Column(String, nullable=False)
     rating = Column(Integer, nullable=False)
-Base.metadata.create_all(engine)
+Base.metadata.create_all(engine)'''
