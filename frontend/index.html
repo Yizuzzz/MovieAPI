@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,26 +9,61 @@
 
 <body>
 
-    <!-- 🔥 NAVBAR -->
-    <div class="navbar">
-        <h1>🍿 Popcorn Time</h1>
+<!-- 🔥 NAVBAR -->
+<div class="navbar">
+    <h1>🍿 Popcorn Time</h1>
 
-        <div class="nav-buttons">
-            <button class="btn-primary" onclick="searchMovies()">🔍 Buscar</button>
-            <button class="btn-secondary" onclick="getFavorites()">⭐ Favoritos</button>
-        </div>
+    <div class="nav-buttons">
+        <button class="btn-primary" onclick="searchMovies()">🔍 Buscar</button>
+        <button class="btn-secondary" onclick="getFavorites()">⭐ Favoritos</button>
+        <button class="btn-secondary" onclick="getWatchlist()">📌 Watchlist</button>
+
+        <!-- Auth -->
+        <button id="login-btn" class="btn-auth" onclick="showLogin()">Login</button>
+        <button id="register-btn" class="btn-auth" onclick="showRegister()">Register</button>
+        <button id="logout-btn" class="btn-logout hidden" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- 🔍 SEARCH -->
+<div class="search-container">
+    <input type="text" id="movie-name" placeholder="Buscar película...">
+</div>
+
+<!-- 🔐 AUTH FORMS -->
+ 
+<div id="auth-container" class="auth-container hidden">
+
+    <!-- LOGIN -->
+    <div id="login-form" class="auth-form hidden">
+        <h2>Login</h2>
+        <input type="text" id="login-email" placeholder="Username">
+        <input type="password" id="login-password" placeholder="Password">
+        <button onclick="login()">Ingresar</button>
     </div>
 
-    <!-- 🔍 SEARCH -->
-    <div class="search-container">
-        <input type="text" id="movie-name" placeholder="Buscar película...">
+    <!-- REGISTER -->
+    <div id="register-form" class="auth-form hidden">
+        <h2>Register</h2>
+        <input type="text" id="register-username" placeholder="Username">
+        <input type="text" id="register-email" placeholder="Email">
+        <input type="password" id="register-password" placeholder="Password">
+        <button onclick="register()">Crear cuenta</button>
     </div>
 
-    <!-- 🎬 CONTENIDO -->
-    <div id="results" class="grid"></div>
-    <div id="favorites" class="grid"></div>
+</div>
 
-    <script src="script.js"></script>
+<!-- 🎬 CONTENIDO -->
+<h2 id="section-title"></h2>
+
+<div id="results" class="grid"></div>
+<div id="favorites" class="grid"></div>
+<div id="watchlist" class="grid"></div>
+
+<!-- ⚠️ MENSAJES -->
+<div id="message" class="message"></div>
+
+<script src="script.js"></script>
 
 </body>
 </html>
