@@ -1,4 +1,7 @@
 from dotenv import load_dotenv
+
+from database.user import User
+from services.jwt import get_current_user
 load_dotenv()
 
 import os
@@ -31,11 +34,6 @@ def get_or_create_movie(db: Session, movie_data: FavoriteCreate | WatchlistCreat
         db.refresh(movie)
     return movie
 
-def get_current_user_id():
-    # Placeholder function to get the current user's ID
-    # In a real application, this would be implemented using authentication
-    return 1  # Replace with actual user ID from authentication
-
 @router.get("/search")
 async def get_movies(q: str):
     movies = fetch_movies_from_tmdb(q)
@@ -43,9 +41,9 @@ async def get_movies(q: str):
     return movies
 
 @router.post("/favorites")
-async def add_favorite(movie: FavoriteCreate, db: Session = Depends(get_db)):
+async def add_favorite(movie: FavoriteCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     movie_db = get_or_create_movie(db, movie)
-    user_id = get_current_user_id()
+    user_id = current_user.id
 
     existing = db.query(Favorite).filter(
         Favorite.user_id == user_id,  # Replace with actual user ID from authentication
@@ -67,11 +65,11 @@ async def add_favorite(movie: FavoriteCreate, db: Session = Depends(get_db)):
     return favorite
 
 @router.get("/favorites", response_model=list[FavoriteResponse])
-async def get_favorites(db:Session = Depends(get_db), rating : int | None = None, page: int = 1, page_size: int = 1000):
+async def get_favorites(db:Session = Depends(get_db), rating : int | None = None, page: int = 1, page_size: int = 1000, current_user: User = Depends(get_current_user)):
     favorites = db.query(Favorite).options(
         joinedload(Favorite.movie)
     ).filter(
-        Favorite.user_id == get_current_user_id()  # Replace with actual user ID from authentication
+        Favorite.user_id == current_user.id
     )
     if rating is not None:
         favorites = favorites.filter(Favorite.rating == rating)
@@ -82,10 +80,10 @@ async def get_favorites(db:Session = Depends(get_db), rating : int | None = None
     return favorites
 
 @router.delete("/favorites/{favorite_id}")
-async def delete_favorite(favorite_id: int, db: Session = Depends(get_db)):
+async def delete_favorite(favorite_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     favorite = db.query(Favorite).filter(
         Favorite.id == favorite_id,
-        Favorite.user_id == get_current_user_id()  # Replace with actual user ID from authentication
+        Favorite.user_id == current_user.id
     ).first()
     if not favorite:
         raise HTTPException(status_code=404, detail="Favorite movie not found")
@@ -94,10 +92,10 @@ async def delete_favorite(favorite_id: int, db: Session = Depends(get_db)):
     return {"message": "Favorite movie deleted successfully"}
 
 @router.patch("/favorites/{favorite_id}")
-async def update_favorite(favorite_id: int, movie: MovieUpdate, db: Session = Depends(get_db)):
+async def update_favorite(favorite_id: int, movie: MovieUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     favorite = db.query(Favorite).filter(
         Favorite.id == favorite_id,
-        Favorite.user_id == get_current_user_id()  # Replace with actual user ID from authentication
+        Favorite.user_id == current_user.id
     ).first()
     if not favorite:
         raise HTTPException(status_code=404, detail="Favorite movie not found")
@@ -113,10 +111,10 @@ async def update_favorite(favorite_id: int, movie: MovieUpdate, db: Session = De
             }
 
 @router.post("/watchlist")
-async def add_to_watchlist(movie: WatchlistCreate, db: Session = Depends(get_db)):
+async def add_to_watchlist(movie: WatchlistCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     movie_db = get_or_create_movie(db, movie)
-    user_id = get_current_user_id()
-    
+    user_id = current_user.id
+
     existing = db.query(Watchlist).filter(
         Watchlist.user_id == user_id,  # Replace with actual user ID from authentication
         Watchlist.movie_id == movie_db.id
@@ -138,8 +136,8 @@ async def add_to_watchlist(movie: WatchlistCreate, db: Session = Depends(get_db)
     }
 
 @router.get("/watchlist", response_model=list[WatchlistResponse])
-async def get_watchlist(db: Session = Depends(get_db), page: int = 1, page_size: int = 1000):
-    user_id = get_current_user_id()
+async def get_watchlist(db: Session = Depends(get_db), page: int = 1, page_size: int = 1000, current_user: User = Depends(get_current_user)):
+    user_id = current_user.id
 
     watchlist = db.query(Watchlist)\
     .options(joinedload(Watchlist.movie))\
@@ -150,10 +148,10 @@ async def get_watchlist(db: Session = Depends(get_db), page: int = 1, page_size:
     return watchlist
 
 @router.delete("/watchlist/{watchlist_id}")
-async def delete_from_watchlist(watchlist_id: int, db: Session = Depends(get_db)):
+async def delete_from_watchlist(watchlist_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     watchlist_entry = db.query(Watchlist).filter(
         Watchlist.id == watchlist_id,
-        Watchlist.user_id == get_current_user_id()  # Replace with actual user ID from authentication
+        Watchlist.user_id == current_user.id
     ).first()
     if not watchlist_entry:
         raise HTTPException(status_code=404, detail="Watchlist entry not found")
