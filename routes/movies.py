@@ -34,7 +34,7 @@ def get_or_create_movie(db: Session, movie_data: FavoriteCreate | WatchlistCreat
 def get_current_user_id():
     # Placeholder function to get the current user's ID
     # In a real application, this would be implemented using authentication
-    return 1
+    return 1  # Replace with actual user ID from authentication
 
 @router.get("/search")
 async def get_movies(q: str):
