@@ -24,6 +24,24 @@ function clearSections() {
     document.getElementById("view-watchlist").innerHTML = "";
 }
 
+function showSkeleton(containerId, count = 8) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    for (let i = 0; i < count; i++) {
+        const div = document.createElement("div");
+        div.classList.add("skeleton-card");
+
+        div.innerHTML = `
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text" style="width: 60%"></div>
+        `;
+
+        container.appendChild(div);
+    }
+}
+
 function showLogin() {
     const container = document.getElementById("auth-container");
 
@@ -151,6 +169,8 @@ function searchMovies() {
 
     const query = document.getElementById("movie-name").value;
     if (!query.trim()) return;
+
+    showSkeleton("view-search");
 
     fetch(`${ruta}search?q=` + query)
         .then(response => response.json())
@@ -326,11 +346,21 @@ function loadFavorites() {
     const favoritesDiv = document.getElementById("view-favorites");
     favoritesDiv.innerHTML = "";
 
+    showSkeleton("view-favorites");
+
     fetch(`${ruta}favorites`, {
         headers: getAuthHeaders()
     })
     .then(res => res.json())
     .then(data => {
+        const container = document.getElementById("view-favorites");
+        container.innerHTML = "";
+
+        /*if (!Array.isArray(data) || data.length === 0) {
+            showEmptyState("view-favorites", "Sin favoritos⭐", "Agrega peliculas primero.");
+            return;
+        }*/
+
         data.forEach(fav => {
             const movieDiv = document.createElement("div");
                 movieDiv.classList.add("favorite-movie");
@@ -365,6 +395,8 @@ function loadWatchlist() {
 
     const container = document.getElementById("view-watchlist");
     container.innerHTML = "";
+
+    showSkeleton("view-watchlist");
 
     fetch(`${ruta}watchlist`, {
         headers: getAuthHeaders()
