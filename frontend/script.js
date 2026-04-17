@@ -76,8 +76,8 @@ function login() {
         document.getElementById("auth-container").classList.add("hidden");
         showToast("Login exitoso 🔐");
     })
-    
     .catch(() => showToast("Error en login"));
+    clearSections();
 }
 
 function register() {
@@ -102,12 +102,14 @@ function register() {
         showLogin();
     })
     .catch(() => showToast("Error en registro"));
+    clearSections();
 }
 
 function logout() {
     token = null;
     localStorage.removeItem("token");
     updateAuthUI();
+    clearSections();
     showToast("Sesión cerrada");
 }
 
@@ -115,15 +117,18 @@ function updateAuthUI() {
     const loginBtn = document.getElementById("login-btn");
     const registerBtn = document.getElementById("register-btn");
     const logoutBtn = document.getElementById("logout-btn");
+    const secondaryBtns = document.querySelectorAll(".btn-secondary");
 
     if (token) {
         loginBtn.classList.add("hidden");
         registerBtn.classList.add("hidden");
         logoutBtn.classList.remove("hidden");
+        secondaryBtns.forEach(btn => btn.classList.remove("hidden"));
     } else {
         loginBtn.classList.remove("hidden");
         registerBtn.classList.remove("hidden");
         logoutBtn.classList.add("hidden");
+        secondaryBtns.forEach(btn => btn.classList.add("hidden"));
     }
 }
 
@@ -202,6 +207,11 @@ function searchMovies() {
 let isSaving = false;
 
 function saveFavorite(movie) {
+    if(!token) {
+        showToast("⚠️ Debes iniciar sesión para guardar favoritos");
+        return Promise.resolve(false);
+    }
+
     const ratingInput = prompt("Califica la película (1-5):");
     if (ratingInput === null) return Promise.resolve(false);
 
@@ -210,6 +220,8 @@ function saveFavorite(movie) {
         alert("Número inválido");
         return Promise.resolve(false);
     }
+
+    const reviewInput = prompt("Escribe una reseña (opcional):");
 
     return fetch(`${ruta}favorites`, {
         method: "POST",
@@ -220,7 +232,8 @@ function saveFavorite(movie) {
             overview: movie.overview,
             poster_path: movie.poster_path,
             release_date: movie.release_date,
-            rating: rating
+            rating: rating,
+            review: reviewInput ? reviewInput.trim() : null
         })
     })
     .then(res => {
@@ -388,6 +401,11 @@ function getWatchlist() {
 }
 
 function addToWatchlist(movie) {
+    if(!token) {
+        showToast("⚠️ Debes iniciar sesión para agregar a watchlist");
+        return;
+    } else {
+
     fetch(`${ruta}watchlist`, {
         method: "POST",
         headers: getAuthHeaders(),
@@ -406,6 +424,7 @@ function addToWatchlist(movie) {
             showToast("Agregado a watchlist 📌");
         }
     });
+    }
 }
 
 function deleteFromWatchlist(id) {
