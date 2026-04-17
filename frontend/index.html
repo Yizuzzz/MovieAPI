@@ -15,8 +15,8 @@
 
     <div class="nav-buttons">
         <button class="btn-primary" onclick="searchMovies()">🔍 Buscar</button>
-        <button class="btn-secondary" onclick="getFavorites()">⭐ Favoritos</button>
-        <button class="btn-secondary" onclick="getWatchlist()">📌 Watchlist</button>
+        <button class="btn-secondary" onclick="loadFavorites()">⭐ Favoritos</button>
+        <button class="btn-secondary" onclick="loadWatchlist()">📌 Watchlist</button>
 
         <!-- Auth -->
         <button id="login-btn" class="btn-auth" onclick="showLogin()">Login</button>
@@ -53,15 +53,29 @@
 
 </div>
 
-<!-- 🎬 CONTENIDO -->
+<!-- 🎬 CONTENIDO SPA -->
 <h2 id="section-title"></h2>
 
-<div id="results" class="grid"></div>
-<div id="favorites" class="grid"></div>
-<div id="watchlist" class="grid"></div>
+<div id="view-search" class="view grid"></div>
+<div id="view-favorites" class="view grid hidden"></div>
+<div id="view-watchlist" class="view grid hidden"></div>
 
 <!-- ⚠️ MENSAJES -->
 <div id="message" class="message"></div>
+
+<div id="edit-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Editar película</h2>
+
+        <input type="number" id="edit-rating" placeholder="Rating (0-5)" min="0" max="5">
+        <textarea id="edit-review" placeholder="Escribe tu reseña..."></textarea>
+
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="submitEdit()">Guardar</button>
+            <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
 
 <script src="script.js"></script>
 

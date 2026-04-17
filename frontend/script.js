@@ -5,6 +5,12 @@ let token = localStorage.getItem("token") || null;
 let debounceTimer;
 const DEBOUNCE_DELAY = 400;
 
+let currentEditId = null;
+
+let currentPage = 1;
+const pageSize = 10;
+let allFavorites = [];
+
 function getAuthHeaders() {
     return {
         "Content-Type": "application/json",
@@ -12,14 +18,10 @@ function getAuthHeaders() {
     };
 }
 
-let currentPage = 1;
-const pageSize = 10;
-let allFavorites = [];
-
 function clearSections() {
-    document.getElementById("results").innerHTML = "";
-    document.getElementById("favorites").innerHTML = "";
-    document.getElementById("watchlist").innerHTML = "";
+    document.getElementById("view-search").innerHTML = "";
+    document.getElementById("view-favorites").innerHTML = "";
+    document.getElementById("view-watchlist").innerHTML = "";
 }
 
 function showLogin() {
@@ -138,7 +140,13 @@ function updateAuthUI() {
 updateAuthUI();
 
 function searchMovies() {
-    document.getElementById("favorites").innerHTML = "";
+    showView("search");
+
+    const resultsDiv = document.getElementById("view-search");
+    resultsDiv.innerHTML = "";
+
+
+    document.getElementById("view-favorites").innerHTML = "";
     clearSections();
 
     const query = document.getElementById("movie-name").value;
@@ -147,7 +155,7 @@ function searchMovies() {
     fetch(`${ruta}search?q=` + query)
         .then(response => response.json())
         .then(data => {
-            const resultsDiv = document.getElementById("results");
+            const resultsDiv = document.getElementById("view-search");
             resultsDiv.innerHTML = "";
 
                 if (!Array.isArray(data)) {
@@ -234,7 +242,7 @@ function saveFavorite(movie) {
     const ratingInput = prompt("Califica la película (1-5):");
     if (ratingInput === null) return Promise.resolve(false);
 
-    const rating = parseInt(ratingInput);
+    const rating = parseFloat(ratingInput);
     if (isNaN(rating) || rating < 1 || rating > 5) {
         alert("Número inválido");
         return Promise.resolve(false);
@@ -300,30 +308,41 @@ function checkIfExistsAndSave(movie, rating) {
         });
 }
 
-function getFavorites() {
-    document.getElementById("results").innerHTML = "";
-    clearSections();
+function showView(viewName) {
+    document.querySelectorAll(".view").forEach(v => {
+        v.classList.add("hidden");
+    });
+
+    document.getElementById(`view-${viewName}`).classList.remove("hidden");
+
+    // 👇 ocultar buscador si no es search
+    const searchBox = document.querySelector(".search-container");
+    searchBox.style.display = viewName === "search" ? "block" : "none";
+}
+
+function loadFavorites() {
+    showView("favorites");
+
+    const favoritesDiv = document.getElementById("view-favorites");
+    favoritesDiv.innerHTML = "";
 
     fetch(`${ruta}favorites`, {
         headers: getAuthHeaders()
     })
-        .then(response => response.json())
-        .then(data => {
-            const favoritesDiv = document.getElementById("favorites");
-            favoritesDiv.innerHTML = "";
-
-            data.forEach(movie => {
-                const movieDiv = document.createElement("div");
+    .then(res => res.json())
+    .then(data => {
+        data.forEach(fav => {
+            const movieDiv = document.createElement("div");
                 movieDiv.classList.add("favorite-movie");
 
                 movieDiv.innerHTML = `
                     <div class="card">
-                        <img src="https://image.tmdb.org/t/p/w300${movie.movie.poster_path}" alt="${movie.movie.title}">
+                        <img src="https://image.tmdb.org/t/p/w300${fav.movie.poster_path}" alt="${fav.movie.title}">
                         
                         <div class="overlay">
-                            <h3>${movie.movie.title}</h3>
-                            <p>⭐ Rating: ${movie.rating}</p>
-                            <p>📝 ${movie.review ?? "Sin reseña"}</p>
+                            <h3>${fav.movie.title}</h3>
+                            <p>⭐ Rating: ${fav.rating}</p>
+                            <p>📝 ${fav.review ?? "Sin reseña"}</p>
                             <button class="update-btn">✏️ Editar</button>
                             <button class="delete-btn">🗑 Eliminar</button>
                         </div>
@@ -331,35 +350,140 @@ function getFavorites() {
                 `;
 
                 movieDiv.querySelector(".update-btn")
-                    .addEventListener("click", () => newRatingValue(movie.movie.id));
+                    .addEventListener("click", () => openEditModal(fav));
 
                 movieDiv.querySelector(".delete-btn")
-                    .addEventListener("click", () => deleteFavorite(movie.movie.id));
+                    .addEventListener("click", () => openEditModal(fav));
 
                 favoritesDiv.appendChild(movieDiv);
+        });
+    });
+}
+
+function loadWatchlist() {
+    showView("watchlist");
+
+    const container = document.getElementById("view-watchlist");
+    container.innerHTML = "";
+
+    fetch(`${ruta}watchlist`, {
+        headers: getAuthHeaders()
+    })
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById("view-watchlist");
+        container.innerHTML = "";
+
+        data.forEach(item => {
+            const div = document.createElement("div");
+            div.classList.add("movie-result");
+
+            div.innerHTML = `
+                <div class="card">
+                    <img src="https://image.tmdb.org/t/p/w300${item.movie.poster_path}">
+                    <div class="overlay">
+                        <h3>${item.movie.title}</h3>
+                        <button onclick="deleteFromWatchlist(${item.id})">🗑 Eliminar</button>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(div);
+        });
+    });
+}
+
+function getFavorites() {
+    document.getElementById("view-search").innerHTML = "";
+    clearSections();
+
+    fetch(`${ruta}favorites`, {
+        headers: getAuthHeaders()
+    })
+        .then(response => response.json())
+        .then(data => {
+            const favoritesDiv = document.getElementById("view-favorites");
+            favoritesDiv.innerHTML = "";
+
+            data.forEach(fav => {
+                
             });
         })
         .catch(error => console.error("Error fetching favorites:", error));
 }
 
-function newRatingValue(movieId) {
+function openEditModal(fav) {
+    currentEditId = fav.id;
+
+    document.getElementById("edit-rating").value = fav.rating || "";
+    document.getElementById("edit-review").value = fav.review || "";
+
+    document.getElementById("edit-modal").classList.remove("hidden");
+
+    document.getElementById("edit-modal").addEventListener("click", (e) => {
+        if (e.target.id === "edit-modal") {
+            closeModal();
+        }
+    });
+}
+
+function closeModal() {
+    document.getElementById("edit-modal").classList.add("hidden");
+}
+
+function submitEdit() {
+    const rating = parseFloat(document.getElementById("edit-rating").value);
+    const review = document.getElementById("edit-review").value;
+
+    if (isNaN(rating) || rating < 0 || rating > 5) {
+        alert("Rating inválido (0-5)");
+        return;
+    }
+
+    fetch(`${ruta}favorites/${currentEditId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            rating: rating,
+            review: review
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        closeModal();
+        showToast("Película actualizada ✨");
+        getFavorites();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error al actualizar");
+    });
+}
+
+/*function newRatingValue(movieId) {
     const newRating = prompt("Ingrese el nuevo rating (1-5):");
-    if (newRating !== null) {
-        const ratingValue = parseInt(newRating);
+    if (newRating === null) return;
+
+    const ratingValue = parseFloat(newRating);
         if (isNaN(ratingValue) || ratingValue < 1 || ratingValue > 5) {
             alert("Por favor, ingrese un número válido entre 1 y 5.");
             return;
         }
-        updateButton(movieId, ratingValue);
-    }
+
+    const newReview = prompt("Nuevo Review (opcional):")
+    if (newReview == "")
+        newReview = "Sin reseña.";
+
+    updateButton(movieId, ratingValue, newReview)
 }
 
-function updateButton(movieId, newRating) {
+function updateButton(movieId, newRating, newReview) {
     fetch(`${ruta}favorites/${movieId}`, {
         method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify({
-            rating: newRating
+            rating: newRating,
+            review: newReview
         })
     })
     .then(response => response.json())
@@ -367,7 +491,7 @@ function updateButton(movieId, newRating) {
         alert(`Película ${data.title} actualizada ⭐`);
         getFavorites(); // Refresh the favorites list
     })
-}
+}*/
 
 function deleteFavorite(movieId) {
     if (confirm("¿Estás seguro de que quieres eliminar esta película de tus favoritos?")) {
@@ -388,8 +512,8 @@ function deleteFavorite(movieId) {
 }
 
 function getWatchlist() {
-    document.getElementById("results").innerHTML = "";
-    document.getElementById("favorites").innerHTML = "";
+    document.getElementById("view-search").innerHTML = "";
+    document.getElementById("view-favorites").innerHTML = "";
     clearSections();
 
     fetch(`${ruta}watchlist`, {
@@ -397,7 +521,7 @@ function getWatchlist() {
     })
     .then(res => res.json())
     .then(data => {
-        const container = document.getElementById("watchlist");
+        const container = document.getElementById("view-watchlist");
         container.innerHTML = "";
 
         data.forEach(item => {

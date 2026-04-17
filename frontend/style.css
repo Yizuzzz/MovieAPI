@@ -53,11 +53,14 @@ body {
     overflow: hidden;
     border-radius: 12px;
     cursor: pointer;
+
+    width: 100%;
+    height: 330px;
 }
 
 .card img {
     width: 100%;
-    height: 330px;
+    height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
@@ -132,6 +135,19 @@ body {
     background-color: #f40612;
     opacity: 1;
     transform: scale(1.08);
+}
+
+.movie-result,
+.favorite-movie,
+.watchlist-movie {
+    width: 100%;
+    max-width: 250px;
+}
+
+.favorite-movie,
+.watchlist-movie {
+    display: flex;
+    justify-content: center;
 }
 
 /* 🔘 BOTONES GENERALES */
@@ -311,4 +327,120 @@ button:active {
 
 html {
     scroll-behavior: smooth;
+}
+
+#section-title {
+    margin: 20px 0;
+    font-size: 22px;
+    color: #ddd;
+}
+
+.view {
+    width: 100%;
+    margin-top: 20px;
+    animation: fadeView 0.25s ease;
+}
+
+.view.hidden {
+    display: none;
+}
+
+@keyframes fadeView {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* BACKDROP */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+/* CONTENEDOR */
+.modal-content {
+    background: linear-gradient(145deg, #1f1f1f, #262626);
+    padding: 30px;
+    border-radius: 16px;
+    width: 360px;
+
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: fadeIn 0.25s ease;
+}
+
+/* TÍTULO */
+.modal-content h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 22px;
+}
+
+/* INPUTS */
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+
+    background: #2c2c2c;
+    color: white;
+
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+    outline: none;
+    border: 1px solid #e50914;
+}
+
+/* TEXTAREA */
+.modal-content textarea {
+    resize: none;
+    height: 80px;
+}
+
+/* BOTONES */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+/* ANIMACIÓN */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
