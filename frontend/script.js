@@ -356,10 +356,14 @@ function loadFavorites() {
         const container = document.getElementById("view-favorites");
         container.innerHTML = "";
 
-        /*if (!Array.isArray(data) || data.length === 0) {
-            showEmptyState("view-favorites", "Sin favoritos⭐", "Agrega peliculas primero.");
+        if (!Array.isArray(data) || data.length === 0) {
+            showEmptyState(
+                "view-favorites",
+                "Sin favoritos ⭐",
+                "Aún no has agregado peliculas"
+            );
             return;
-        }*/
+        }
 
         data.forEach(fav => {
             const movieDiv = document.createElement("div");
@@ -405,6 +409,15 @@ function loadWatchlist() {
     .then(data => {
         const container = document.getElementById("view-watchlist");
         container.innerHTML = "";
+
+        if (!Array.isArray(data) || data.length === 0) {
+            showEmptyState(
+                "view-watchlist",
+                "Tu watchlist está vacía 📌.",
+                "Guarda películas para ver después."
+            );
+            return;
+        }
 
         data.forEach(item => {
             const div = document.createElement("div");
@@ -625,6 +638,17 @@ function showToast(message) {
         toast.classList.remove("show");
         setTimeout(() => toast.remove(), 300);
     }, 2000);
+}
+
+function showEmptyState(containerId, title, message) {
+    const container = document.getElementById(containerId);
+
+    container.innerHTML = `
+        <div class="empty-state">
+            <h3>${title}</h3>
+            <p>${message}</p>
+        </div>
+    `;
 }
 
 document.getElementById("movie-name")

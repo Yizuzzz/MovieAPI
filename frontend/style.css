@@ -589,3 +589,28 @@ html {
     margin: 10px;
     border-radius: 6px;
 }
+
+.empty-state {
+    text-align: center;
+    margin-top: 60px;
+    opacity: 0.85;
+    animation: fadeIn 0.4s ease;
+}
+
+.empty-state h3 {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: #aaa;
+}
+
+/* 👇 icono grande opcional */
+.empty-state::before {
+    content: "🎬";
+    display: block;
+    font-size: 40px;
+    margin-bottom: 10px;
+}
