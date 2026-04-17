@@ -1,18 +1,47 @@
-# 🎬 Movie API - FastAPI Project
+# 🎬 Movie API - Full Stack App (FastAPI + SPA)
 
-This project is a full-stack application built with **FastAPI**, **SQLite**, and a simple **JavaScript frontend** that allows users to search for movies and manage their list of favorite films.
+A modern full-stack movie application built with **FastAPI**, **PostgreSQL (Supabase)**, and a **Vanilla JavaScript SPA frontend**.
 
-It integrates with the **TMDB (The Movie Database) API** to fetch real movie data and provides full CRUD functionality for storing favorites locally.
+Users can search movies from TMDB, create accounts, authenticate using JWT, and manage both **Favorites** and **Watchlist** with ratings and reviews.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-* 🔍 Search movies using TMDB API
-* ⭐ Save movies as favorites
-* ✏️ Update movie ratings (1–5)
-* 🗑️ Delete favorites
-* 🎨 Interactive UI with hover effects and animations
+### 🔍 Movie Search
+
+* Search real movies via TMDB API
+* Dynamic results with instant search (debounce)
+* Poster, overview, and release date
+
+### 🔐 Authentication (JWT)
+
+* User registration & login
+* Secure password hashing (bcrypt)
+* JWT-based authentication
+* Protected routes (favorites & watchlist)
+
+### ⭐ Favorites System
+
+* Add movies to favorites
+* Rate movies (1–5)
+* Add personal reviews
+* Update rating & review (modal UI)
+* Delete favorites
+
+### 📌 Watchlist
+
+* Save movies to watch later
+* Prevent duplicates
+* Remove from watchlist
+
+### 🎨 Frontend (SPA)
+
+* Single Page Application (no reloads)
+* Dynamic view switching (search / favorites / watchlist)
+* Modal-based editing (no prompt)
+* Toast notifications
+* Netflix-style UI (cards + hover effects)
 
 ---
 
@@ -23,14 +52,17 @@ It integrates with the **TMDB (The Movie Database) API** to fetch real movie dat
 * Python
 * FastAPI
 * SQLAlchemy
-* SQLite
-* HTTPX
+* Alembic (migrations)
+* PostgreSQL (Supabase)
+* JWT Authentication
+* Passlib (bcrypt)
+* HTTPX (TMDB requests)
 
 ### Frontend
 
 * HTML
-* CSS (custom styling, card-based UI)
-* Vanilla JavaScript
+* CSS (custom, Netflix-style UI)
+* Vanilla JavaScript (SPA logic)
 
 ---
 
@@ -40,59 +72,87 @@ It integrates with the **TMDB (The Movie Database) API** to fetch real movie dat
 MovieAPI/
 │
 ├── main.py
+│
 ├── database/
 │   ├── database.py
-│   └── models.py
+│   ├── user.py
+│   ├── movie.py
+│   ├── favorite.py
+│   └── watchlist.py
 │
 ├── routes/
+│   ├── auth.py
 │   └── movies.py
 │
 ├── schemas/
-│   └── movie.py
+│   ├── user.py
+│   ├── movie.py
 │
 ├── services/
 │   └── fetch_movies.py
+│   └── JWT.py
+│   └── security.py
+│
+├── alembic/
+│   └── versions/
 │
 ├── frontend/
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
 │
-└── requirements.txt
+├── alembic.ini
+├── requirements.txt
 ```
 
 ---
 
 ## ⚙️ Setup (Local)
 
-1. Clone the repository:
+### 1. Clone repo
 
 ```
 git clone https://github.com/Yizuzzz/MovieAPI.git
 cd MovieAPI
 ```
 
-2. Create virtual environment:
+### 2. Virtual environment
 
 ```
 python -m venv venv
-source venv/bin/activate  # macOS/Linux
-venv\Scripts\activate     # Windows
+source venv/bin/activate
 ```
 
-3. Install dependencies:
+### 3. Install dependencies
 
 ```
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file:
+### 4. Environment variables
+
+Create `.env`:
 
 ```
-TMDB_APIKEY=your_tmdb_api_key_v3
+DATABASE_URL=your_supabase_postgres_url
+TMDB_APIKEY=your_tmdb_api_key
+SECRET_KEY=your_jwt_secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
-5. Run the server:
+---
+
+### 5. Run migrations
+
+```
+alembic revision --autogenerate -m "init"
+alembic upgrade head
+```
+
+---
+
+### 6. Run server
 
 ```
 uvicorn main:app --reload
@@ -102,42 +162,94 @@ uvicorn main:app --reload
 
 ## 🌐 Deployment
 
-* Backend deployed on Render
-* Frontend can be served locally or deployed on Vercel
+* Backend → Render
+* Database → Supabase (PostgreSQL)
+* Frontend → Vercel
 
 ---
 
-## 🔑 Important Note
+## 🔑 Authentication Flow
 
-This project uses the **TMDB API v3 key**, which must be passed as a query parameter:
+1. User logs in via `/auth/login`
+2. Receives JWT token
+3. Token stored in frontend (localStorage)
+4. Sent in headers:
 
 ```
-api_key=YOUR_API_KEY
+Authorization: Bearer <token>
 ```
 
-Bearer tokens (v4) are **not used** in this implementation.
+---
+
+## 📡 API Endpoints
+
+### 🔐 Auth
+
+| Method | Endpoint       | Description |
+| ------ | -------------- | ----------- |
+| POST   | /auth/register | Create user |
+| POST   | /auth/login    | Login + JWT |
 
 ---
 
-## 📌 Endpoints Overview
+### 🎬 Movies
 
-| Method | Endpoint               | Description       |
-| ------ | ---------------------- | ----------------- |
-| GET    | /movies/search?q=      | Search movies     |
-| POST   | /movies/favorites      | Add favorite      |
-| GET    | /movies/favorites      | Get all favorites |
-| PATCH  | /movies/favorites/{id} | Update rating     |
-| DELETE | /movies/favorites/{id} | Delete favorite   |
+| Method | Endpoint          | Description |
+| ------ | ----------------- | ----------- |
+| GET    | /movies/search?q= | Search TMDB |
 
 ---
 
-## 🎯 Future Improvements
+### ⭐ Favorites (Protected)
 
-* User authentication
-* Cloud database (PostgreSQL)
-* Better UI/UX (React or Svelte)
-* Image caching
-* Rate limiting & logging
+| Method | Endpoint               | Description            |
+| ------ | ---------------------- | ---------------------- |
+| GET    | /movies/favorites      | Get user favorites     |
+| POST   | /movies/favorites      | Add favorite           |
+| PATCH  | /movies/favorites/{id} | Update rating & review |
+| DELETE | /movies/favorites/{id} | Delete favorite        |
+
+---
+
+### 📌 Watchlist (Protected)
+
+| Method | Endpoint               | Description   |
+| ------ | ---------------------- | ------------- |
+| GET    | /movies/watchlist      | Get watchlist |
+| POST   | /movies/watchlist      | Add movie     |
+| DELETE | /movies/watchlist/{id} | Remove movie  |
+
+---
+
+## 🎨 Frontend Highlights
+
+* SPA navigation (no reload)
+* Debounced search
+* Modal editing (rating + review)
+* Toast notifications
+* Responsive grid layout
+* Auth-aware UI (login/logout states)
+
+---
+
+## ⚠️ Known Challenges Solved
+
+* CORS issues (Render ↔ Vercel)
+* JWT integration with Swagger
+* Handling 401/422 errors
+* Preventing duplicate favorites/watchlist
+* Syncing frontend state with backend
+
+---
+
+## 🚀 Future Improvements
+
+* Refresh tokens
+* User profiles
+* Pagination / infinite scroll
+* Image lazy loading
+* Full framework frontend (React / Svelte)
+* Recommendations system (ML/AI 👀)
 
 ---
 
@@ -150,4 +262,6 @@ Jesús Alvarez
 ## ⭐ Acknowledgements
 
 * TMDB API
-* FastAPI Documentation
+* FastAPI docs
+* Supabase
+* Render / Vercel
