@@ -2,6 +2,9 @@ const ruta = "https://movieapi-mwc0.onrender.com/movies/";
 
 let token = localStorage.getItem("token") || null;
 
+let debounceTimer;
+const DEBOUNCE_DELAY = 400;
+
 function getAuthHeaders() {
     return {
         "Content-Type": "application/json",
@@ -139,6 +142,7 @@ function searchMovies() {
     clearSections();
 
     const query = document.getElementById("movie-name").value;
+    if (!query.trim()) return;
 
     fetch(`${ruta}search?q=` + query)
         .then(response => response.json())
@@ -205,6 +209,21 @@ function searchMovies() {
 }
 
 let isSaving = false;
+
+let lastQuery = "";
+
+function handleSearchInput(event) {
+    const query = event.target.value;
+
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(() => {
+        if (query.trim() !== "" && query !== lastQuery) {
+            lastQuery = query;
+            searchMovies();
+        }
+    }, DEBOUNCE_DELAY);
+}
 
 function saveFavorite(movie) {
     if(!token) {
@@ -452,9 +471,5 @@ function showToast(message) {
     }, 2000);
 }
 
-document.getElementById("movie-name").addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        searchMovies();
-    }
-});
+document.getElementById("movie-name")
+    .addEventListener("input", handleSearchInput);
