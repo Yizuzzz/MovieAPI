@@ -15,8 +15,8 @@
 
     <div class="nav-buttons">
         <button class="btn-primary" onclick="searchMovies()">🔍 Buscar</button>
-        <button class="btn-secondary" onclick="loadFavorites()">⭐ Favoritos</button>
-        <button class="btn-secondary" onclick="loadWatchlist()">📌 Watchlist</button>
+        <button id="favorites-btn" class="btn-secondary hidden" onclick="loadFavorites()">⭐ Favoritos</button>
+        <button id="watchlist-btn" class="btn-secondary hidden" onclick="loadWatchlist()">📌 Watchlist</button>
 
         <!-- Auth -->
         <button id="login-btn" class="btn-auth" onclick="showLogin()">Login</button>
@@ -30,28 +30,46 @@
     <input type="text" id="movie-name" placeholder="Buscar película...">
 </div>
 
-<!-- 🔐 AUTH FORMS -->
- 
-<div id="auth-container" class="auth-container hidden">
+<!-- 🔐 LOGIN MODAL -->
+<div id="login-modal" class="modal hidden">
+    <div class="modal-content auth-modal">
+        <h2>Iniciar sesión</h2>
 
-    <!-- LOGIN -->
-    <div id="login-form" class="auth-form hidden">
-        <h2>Login</h2>
         <input type="text" id="login-email" placeholder="Username">
         <input type="password" id="login-password" placeholder="Password">
-        <button onclick="login()">Ingresar</button>
-    </div>
 
-    <!-- REGISTER -->
-    <div id="register-form" class="auth-form hidden">
-        <h2>Register</h2>
+        <button class="btn-primary" onclick="login()">Ingresar</button>
+
+        <p class="auth-switch">
+            ¿No tienes cuenta?
+            <span onclick="switchToRegister()">Regístrate</span>
+        </p>
+
+        <button class="modal-close" onclick="closeAuthModals()">✖</button>
+    </div>
+</div>
+
+
+<!-- 🆕 REGISTER MODAL -->
+<div id="register-modal" class="modal hidden">
+    <div class="modal-content auth-modal">
+        <h2>Crear cuenta</h2>
+
         <input type="text" id="register-username" placeholder="Username">
         <input type="text" id="register-email" placeholder="Email">
         <input type="password" id="register-password" placeholder="Password">
-        <button onclick="register()">Crear cuenta</button>
-    </div>
 
+        <button class="btn-primary" onclick="register()">Crear cuenta</button>
+
+        <p class="auth-switch">
+            ¿Ya tienes cuenta?
+            <span onclick="switchToLogin()">Inicia sesión</span>
+        </p>
+
+        <button class="modal-close" onclick="closeAuthModals()">✖</button>
+    </div>
 </div>
+
 
 <!-- 🎬 CONTENIDO SPA -->
 <h2 id="section-title"></h2>

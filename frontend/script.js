@@ -43,35 +43,29 @@ function showSkeleton(containerId, count = 8) {
 }
 
 function showLogin() {
-    const container = document.getElementById("auth-container");
-
-    container.classList.remove("hidden");
-
-    document.getElementById("login-form").classList.remove("hidden");
-    document.getElementById("register-form").classList.add("hidden");
-    document.addEventListener("click", (e) => {
-    const container = document.getElementById("auth-container");
-
-    if (!container.contains(e.target) && !e.target.closest(".btn-auth")) {
-        container.classList.add("hidden");
-    }
-});
+    closeAuthModals();
+    document.getElementById("login-modal").classList.remove("hidden");
 }
 
 function showRegister() {
-    const container = document.getElementById("auth-container");
+    closeAuthModals();
+    document.getElementById("register-modal").classList.remove("hidden");
+}
 
-    container.classList.remove("hidden");
+function closeAuthModals() {
+    document.getElementById("login-modal").classList.add("hidden");
+    document.getElementById("register-modal").classList.add("hidden");
+}
 
-    document.getElementById("register-form").classList.remove("hidden");
-    document.getElementById("login-form").classList.add("hidden");
-    document.addEventListener("click", (e) => {
-    const container = document.getElementById("auth-container");
+// 🔁 Switch entre modales
+function switchToRegister() {
+    document.getElementById("login-modal").classList.add("hidden");
+    document.getElementById("register-modal").classList.remove("hidden");
+}
 
-    if (!container.contains(e.target) && !e.target.closest(".btn-auth")) {
-        container.classList.add("hidden");
-    }
-});
+function switchToLogin() {
+    document.getElementById("register-modal").classList.add("hidden");
+    document.getElementById("login-modal").classList.remove("hidden");
 }
 
 function login() {
@@ -89,18 +83,37 @@ function login() {
         },
         body: formData
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.detail || "Error en login");
+        }
+
+        return data;
+    })
     .then(data => {
-        token = data.access_token;
+        const token = data.access_token;
+
+        if (!token) {
+            throw new Error("Token no recibido");
+        }
+
         localStorage.setItem("token", token);
+
+        showToast("Login exitoso ✅");
+
+        closeAuthModals();
         updateAuthUI();
+        clearSections();
+
         document.getElementById("login-email").value = "";
         document.getElementById("login-password").value = "";
-        document.getElementById("auth-container").classList.add("hidden");
-        showToast("Login exitoso 🔐");
     })
-    .catch(() => showToast("Error en login"));
-    clearSections();
+    .catch(err => {
+        console.error(err);
+        showToast(err.message || "Error de conexión ❌");
+    });
 }
 
 function register() {
@@ -125,33 +138,50 @@ function register() {
         showLogin();
     })
     .catch(() => showToast("Error en registro"));
+    closeAuthModals();
     clearSections();
 }
 
 function logout() {
-    token = null;
-    localStorage.removeItem("token");
+    localStorage.removeItem("token")
+
+    showToast("Sesión cerrada 👋");
+
     updateAuthUI();
     clearSections();
-    showToast("Sesión cerrada");
 }
 
 function updateAuthUI() {
+    const token = localStorage.getItem("token");
+
     const loginBtn = document.getElementById("login-btn");
     const registerBtn = document.getElementById("register-btn");
     const logoutBtn = document.getElementById("logout-btn");
-    const secondaryBtns = document.querySelectorAll(".btn-secondary");
+    const favoritesBtn = document.getElementById("favorites-btn");
+    const watchlistBtn = document.getElementById("watchlist-btn");
+
+    if (!loginBtn || !registerBtn || !logoutBtn || !favoritesBtn || !watchlistBtn) {
+        console.error("Elementos de auth no encontrados");
+        return;
+    }
 
     if (token) {
+        // 🔐 Usuario logueado
         loginBtn.classList.add("hidden");
         registerBtn.classList.add("hidden");
+
         logoutBtn.classList.remove("hidden");
-        secondaryBtns.forEach(btn => btn.classList.remove("hidden"));
+        favoritesBtn.classList.remove("hidden");
+        watchlistBtn.classList.remove("hidden");
+
     } else {
+        // 🚪 Usuario NO logueado
         loginBtn.classList.remove("hidden");
         registerBtn.classList.remove("hidden");
+
         logoutBtn.classList.add("hidden");
-        secondaryBtns.forEach(btn => btn.classList.add("hidden"));
+        favoritesBtn.classList.add("hidden");
+        watchlistBtn.classList.add("hidden");
     }
 }
 
@@ -505,39 +535,6 @@ function submitEdit() {
     });
 }
 
-/*function newRatingValue(movieId) {
-    const newRating = prompt("Ingrese el nuevo rating (1-5):");
-    if (newRating === null) return;
-
-    const ratingValue = parseFloat(newRating);
-        if (isNaN(ratingValue) || ratingValue < 1 || ratingValue > 5) {
-            alert("Por favor, ingrese un número válido entre 1 y 5.");
-            return;
-        }
-
-    const newReview = prompt("Nuevo Review (opcional):")
-    if (newReview == "")
-        newReview = "Sin reseña.";
-
-    updateButton(movieId, ratingValue, newReview)
-}
-
-function updateButton(movieId, newRating, newReview) {
-    fetch(`${ruta}favorites/${movieId}`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-            rating: newRating,
-            review: newReview
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert(`Película ${data.title} actualizada ⭐`);
-        getFavorites(); // Refresh the favorites list
-    })
-}*/
-
 function deleteFavorite(movieId) {
     if (confirm("¿Estás seguro de que quieres eliminar esta película de tus favoritos?")) {
         fetch(`${ruta}favorites/${movieId}`, {
@@ -650,6 +647,10 @@ function showEmptyState(containerId, title, message) {
         </div>
     `;
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    updateAuthUI();
+});
 
 document.getElementById("movie-name")
     .addEventListener("input", handleSearchInput);
