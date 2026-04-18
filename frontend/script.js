@@ -12,6 +12,8 @@ const pageSize = 10;
 let allFavorites = [];
 
 function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+
     return {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
@@ -128,18 +130,28 @@ function register() {
         },
         body: JSON.stringify({ username, email, password })
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.detail || "Error en registro");
+        }
+
+        return data;
+    })
     .then(() => {
         showToast("Usuario creado 🎉");
+
         document.getElementById("register-username").value = "";
         document.getElementById("register-email").value = "";
         document.getElementById("register-password").value = "";
-        document.getElementById("auth-container").classList.add("hidden");
-        showLogin();
+
+        switchToLogin();
     })
-    .catch(() => showToast("Error en registro"));
-    closeAuthModals();
-    clearSections();
+    .catch(err => {
+        console.error(err);
+        showToast(err.message || "Error en registro");
+    });
 }
 
 function logout() {
@@ -373,54 +385,68 @@ function showView(viewName) {
 function loadFavorites() {
     showView("favorites");
 
-    const favoritesDiv = document.getElementById("view-favorites");
-    favoritesDiv.innerHTML = "";
+    const container = document.getElementById("view-favorites");
+    container.innerHTML = "";
 
     showSkeleton("view-favorites");
 
     fetch(`${ruta}favorites`, {
         headers: getAuthHeaders()
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error("No autorizado");
+        return res.json();
+    })
     .then(data => {
-        const container = document.getElementById("view-favorites");
         container.innerHTML = "";
 
         if (!Array.isArray(data) || data.length === 0) {
             showEmptyState(
                 "view-favorites",
                 "Sin favoritos ⭐",
-                "Aún no has agregado peliculas"
+                "Aún no has agregado películas"
             );
             return;
         }
 
         data.forEach(fav => {
             const movieDiv = document.createElement("div");
-                movieDiv.classList.add("favorite-movie");
+            movieDiv.classList.add("favorite-movie");
 
-                movieDiv.innerHTML = `
-                    <div class="card">
-                        <img src="https://image.tmdb.org/t/p/w300${fav.movie.poster_path}" alt="${fav.movie.title}">
-                        
-                        <div class="overlay">
-                            <h3>${fav.movie.title}</h3>
-                            <p>⭐ Rating: ${fav.rating}</p>
-                            <p>📝 ${fav.review ?? "Sin reseña"}</p>
-                            <button class="update-btn">✏️ Editar</button>
-                            <button class="delete-btn">🗑 Eliminar</button>
-                        </div>
+            movieDiv.innerHTML = `
+                <div class="card">
+                    <img src="https://image.tmdb.org/t/p/w300${fav.movie.poster_path}" alt="${fav.movie.title}">
+                    
+                    <div class="overlay">
+                        <h3>${fav.movie.title}</h3>
+                        <p>⭐ Rating: ${fav.rating}</p>
+                        <p>📝 ${fav.review ?? "Sin reseña"}</p>
+
+                        <button class="update-btn">✏️ Editar</button>
+                        <button class="delete-btn">🗑 Eliminar</button>
                     </div>
-                `;
+                </div>
+            `;
 
-                movieDiv.querySelector(".update-btn")
-                    .addEventListener("click", () => openEditModal(fav));
+            // ✅ EDITAR
+            movieDiv.querySelector(".update-btn")
+                .addEventListener("click", () => openEditModal(fav));
 
-                movieDiv.querySelector(".delete-btn")
-                    .addEventListener("click", () => openEditModal(fav));
+            // ✅ ELIMINAR (FIX IMPORTANTE)
+            movieDiv.querySelector(".delete-btn")
+                .addEventListener("click", () => deleteFavorite(fav.id));
 
-                favoritesDiv.appendChild(movieDiv);
+            container.appendChild(movieDiv);
         });
+    })
+    .catch(err => {
+        console.error(err);
+
+        showEmptyState(
+            "view-favorites",
+            "Error de autenticación 🔒",
+            "Inicia sesión para ver tus favoritos"
+        );
     });
 }
 
