@@ -1,6 +1,6 @@
 const ruta = "https://movieapi-mwc0.onrender.com/movies/";
 
-let token = localStorage.getItem("token") || null;
+//let token = localStorage.getItem("token") || null;
 
 let debounceTimer;
 const DEBOUNCE_DELAY = 400;
@@ -269,7 +269,6 @@ function searchMovies() {
 
                 watchBtn.addEventListener("click", () => {
                     addToWatchlist(movie);
-                    showToast("Película agregada a watchlist 📌")
                 ;});
 
                 resultsDiv.appendChild(movieDiv);
@@ -612,14 +611,19 @@ function getWatchlist() {
 }
 
 function addToWatchlist(movie) {
-    if(!token) {
+    const token = localStorage.getItem("token"); // 👈 SIEMPRE leer fresco
+
+    if (!token) {
         showToast("⚠️ Debes iniciar sesión para agregar a watchlist");
         return;
-    } else {
+    }
 
     fetch(`${ruta}watchlist`, {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
             tmdb_id: movie.id,
             title: movie.title,
@@ -628,14 +632,29 @@ function addToWatchlist(movie) {
             release_date: movie.release_date
         })
     })
-    .then(res => {
-        if (!res.ok) {
-            showToast("⚠️ Ya está en watchlist");
-        } else {
-            showToast("Agregado a watchlist 📌");
+    .then(async res => {
+        const data = await res.json().catch(() => null);
+
+        if (res.status === 401) {
+            showToast("⚠️ Sesión expirada, vuelve a iniciar sesión");
+            return;
         }
+
+        if (res.status === 409) {
+            showToast("⚠️ Ya está en watchlist");
+            return;
+        }
+
+        if (!res.ok) {
+            showToast("Error al agregar ❌");
+            return;
+        }
+
+        showToast("Agregado a watchlist 📌");
+    })
+    .catch(() => {
+        showToast("Error de conexión ❌");
     });
-    }
 }
 
 function deleteFromWatchlist(id) {
