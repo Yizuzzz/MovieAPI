@@ -12,6 +12,11 @@ let currentPage = 1;
 const pageSize = 10;
 let allFavorites = [];
 
+let isSaving = false;
+
+let lastQuery = "";
+
+
 function getAuthHeaders() {
     const token = localStorage.getItem("token");
 
@@ -264,10 +269,6 @@ function searchMovies() {
         .catch(error => console.error("Error fetching movies:", error));
 }
 
-let isSaving = false;
-
-let lastQuery = "";
-
 function handleSearchInput(event) {
     const query = event.target.value;
 
@@ -279,45 +280,6 @@ function handleSearchInput(event) {
             searchMovies();
         }
     }, DEBOUNCE_DELAY);
-}
-
-function saveFavorite(movie) {
-    if(!token) {
-        showToast("⚠️ Debes iniciar sesión para guardar favoritos");
-        return Promise.resolve(false);
-    }
-
-    const ratingInput = prompt("Califica la película (1-5):");
-    if (ratingInput === null) return Promise.resolve(false);
-
-    const rating = parseFloat(ratingInput);
-    if (isNaN(rating) || rating < 1 || rating > 5) {
-        alert("Número inválido");
-        return Promise.resolve(false);
-    }
-
-    const reviewInput = prompt("Escribe una reseña (opcional):");
-
-    return fetch(`${ruta}favorites`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-            tmdb_id: movie.id,
-            title: movie.title,
-            overview: movie.overview,
-            poster_path: movie.poster_path,
-            release_date: movie.release_date,
-            rating: rating,
-            review: reviewInput ? reviewInput.trim() : null
-        })
-    })
-    .then(res => {
-        if (!res.ok) {
-            showToast("⚠️ Ya está en favoritos o no autorizado");
-            return false;
-        }
-        return true;
-    });
 }
 
 function checkIfExistsAndSave(movie, rating) {
