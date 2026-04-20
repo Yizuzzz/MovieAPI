@@ -1,6 +1,6 @@
 const ruta = "https://movieapi-mwc0.onrender.com/movies/";
 
-//let token = localStorage.getItem("token") || null;
+let token = localStorage.getItem("token") || null;
 
 let debounceTimer;
 const DEBOUNCE_DELAY = 400;
