@@ -96,6 +96,20 @@
     </div>
 </div>
 
+<div id="save-modal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Guardar en favoritos</h2>
+
+        <input type="number" id="save-rating" placeholder="Rating (1-5)" min="1" max="5">
+        <textarea id="save-review" placeholder="Escribe una reseña..."></textarea>
+
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="submitSaveFavorite()">Guardar</button>
+            <button class="btn-secondary" onclick="closeSaveModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script src="script.js"></script>
 
 </body>

@@ -6,6 +6,7 @@ let debounceTimer;
 const DEBOUNCE_DELAY = 400;
 
 let currentEditId = null;
+let currentMovieToSave = null;
 
 let currentPage = 1;
 const pageSize = 10;
@@ -248,22 +249,8 @@ function searchMovies() {
                 const saveBtn = movieDiv.querySelector(".save-btn");
 
                 saveBtn.addEventListener("click", () => {
-                    saveBtn.disabled = true;
-                    const card = saveBtn.closest(".card");
-
-                    saveFavorite(movie).then(success => {
-                        if (success) {
-                            saveBtn.textContent = "✔ Guardado";
-
-                            card.classList.add("pop");
-                            setTimeout(() => card.classList.remove("pop"), 300);
-
-                            showToast("Película agregada a favoritos ⭐");
-                        } else {
-                            saveBtn.disabled = false;
-                        }
-                    });
-                }, { once: true });
+                    openSaveModal(movie);
+                });
 
                 const watchBtn = movieDiv.querySelector(".watch-btn");
 
@@ -558,6 +545,75 @@ function submitEdit() {
         console.error(err);
         alert("Error al actualizar");
     });
+}
+
+function openSaveModal(movie) {
+    if (!token) {
+        showToast("⚠️ Debes iniciar sesión para guardar favoritos");
+        return;
+    }
+
+    currentMovieToSave = movie;
+
+    document.getElementById("save-rating").value = "";
+    document.getElementById("save-review").value = "";
+
+    document.getElementById("save-modal").classList.remove("hidden");
+
+    document.getElementById("save-modal").addEventListener("click", (e) => {
+        if (e.target.id === "save-modal") {
+            closeSaveModal();
+        }
+    });
+}
+
+function closeSaveModal() {
+    document.getElementById("save-modal").classList.add("hidden");
+}
+
+function submitSaveFavorite() {
+    const saveButton = document.querySelector("#save-modal .btn-primary");
+    saveButton.disabled = true;
+    const rating = parseFloat(document.getElementById("save-rating").value);
+    const review = document.getElementById("save-review").value;
+
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+        showToast("⚠️ Rating inválido (1-5)");
+        return;
+    }
+
+    fetch(`${ruta}favorites`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            tmdb_id: currentMovieToSave.id,
+            title: currentMovieToSave.title,
+            overview: currentMovieToSave.overview,
+            poster_path: currentMovieToSave.poster_path,
+            release_date: currentMovieToSave.release_date,
+            rating: rating,
+            review: review ? review.trim() : null
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            showToast("⚠️ Ya está en favoritos o error");
+            return;
+        }
+
+        showToast("Película agregada ⭐");
+        closeSaveModal();
+
+        // animación opcional después de guardar
+        const cards = document.querySelectorAll(".card");
+        cards.forEach(card => {
+            if (card.innerHTML.includes(currentMovieToSave.title)) {
+                card.classList.add("pop");
+                setTimeout(() => card.classList.remove("pop"), 300);
+            }
+        });
+    })
+    .catch(() => showToast("Error de conexión ❌"));
 }
 
 function deleteFavorite(movieId) {
