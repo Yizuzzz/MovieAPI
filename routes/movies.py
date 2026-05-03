@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
 from database.user import User
-from services.jwt import get_current_user
+from services.jwt import get_current_user, set_jwt_claims
 load_dotenv()
 
 import os
@@ -42,11 +42,13 @@ async def get_movies(q: str):
 
 @router.post("/favorites")
 async def add_favorite(movie: FavoriteCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+
     movie_db = get_or_create_movie(db, movie)
     user_id = current_user.id
 
     existing = db.query(Favorite).filter(
-        Favorite.user_id == user_id,  # Replace with actual user ID from authentication
         Favorite.movie_id == movie_db.id
     ).first()
 
@@ -66,6 +68,9 @@ async def add_favorite(movie: FavoriteCreate, db: Session = Depends(get_db), cur
 
 @router.get("/favorites", response_model=list[FavoriteResponse])
 async def get_favorites(db:Session = Depends(get_db), rating : int | None = None, page: int = 1, page_size: int = 1000, current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+
     favorites = db.query(Favorite).options(
         joinedload(Favorite.movie)
     ).filter(
@@ -81,6 +86,9 @@ async def get_favorites(db:Session = Depends(get_db), rating : int | None = None
 
 @router.delete("/favorites/{favorite_id}")
 async def delete_favorite(favorite_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+
     favorite = db.query(Favorite).filter(
         Favorite.id == favorite_id,
         Favorite.user_id == current_user.id
@@ -93,6 +101,9 @@ async def delete_favorite(favorite_id: int, db: Session = Depends(get_db), curre
 
 @router.patch("/favorites/{favorite_id}")
 async def update_favorite(favorite_id: int, movie: MovieUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+
     favorite = db.query(Favorite).filter(
         Favorite.id == favorite_id,
         Favorite.user_id == current_user.id
@@ -112,6 +123,9 @@ async def update_favorite(favorite_id: int, movie: MovieUpdate, db: Session = De
 
 @router.post("/watchlist")
 async def add_to_watchlist(movie: WatchlistCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+
     movie_db = get_or_create_movie(db, movie)
     user_id = current_user.id
 
@@ -137,6 +151,9 @@ async def add_to_watchlist(movie: WatchlistCreate, db: Session = Depends(get_db)
 
 @router.get("/watchlist", response_model=list[WatchlistResponse])
 async def get_watchlist(db: Session = Depends(get_db), page: int = 1, page_size: int = 1000, current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+
     user_id = current_user.id
 
     watchlist = db.query(Watchlist)\
@@ -149,6 +166,9 @@ async def get_watchlist(db: Session = Depends(get_db), page: int = 1, page_size:
 
 @router.delete("/watchlist/{watchlist_id}")
 async def delete_from_watchlist(watchlist_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    set_jwt_claims(db, current_user)
+    
     watchlist_entry = db.query(Watchlist).filter(
         Watchlist.id == watchlist_id,
         Watchlist.user_id == current_user.id

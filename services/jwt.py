@@ -6,22 +6,61 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database.database import get_db
 from database.user import User
+import json
+from sqlalchemy import text
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 20)))
+
+    if "user_id" in to_encode:
+        to_encode["sub"] = str(to_encode["user_id"])
+
+    expire = datetime.utcnow() + timedelta(
+        minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 20))
+    )
+
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, os.getenv("SECRET_KEY"), algorithm=os.getenv("ALGORITHM"))
+
+    return jwt.encode(
+        to_encode,
+        os.getenv("SECRET_KEY"),
+        algorithm=os.getenv("ALGORITHM")
+    )
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
-        user_id: int = payload.get("user_id")
+        payload = jwt.decode(
+            token,
+            os.getenv("SECRET_KEY"),
+            algorithms=[os.getenv("ALGORITHM")]
+        )
+
+        user_id: int = payload.get("sub")
+
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
         current_user = db.query(User).filter(User.id == user_id).first()
+
         if current_user is None:
             raise HTTPException(status_code=401, detail="Invalid token")
+        
         return current_user
+    
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+def set_jwt_claims(db, user):
+    claims = json.dumps({
+        "sub": str(user.id)
+    })
+
+    db.execute(text("""
+        select set_config(
+                    'request.jwt.claims',
+                    :claims,
+                    true
+                )
+    """), {"claims":claims})

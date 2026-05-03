@@ -292,6 +292,7 @@ function checkIfExistsAndSave(movie, rating) {
             );
 
             if (exists) {
+                closeSaveModal();
                 alert("⚠️ Esta película ya está en favoritos");
                 return;
             }
